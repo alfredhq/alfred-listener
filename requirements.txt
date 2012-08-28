@@ -1,12 +1,15 @@
 Flask==0.9
-  Werkzeug==0.8.3
   Jinja2==2.6
+  Werkzeug==0.8.3
 SQLAlchemy==0.7.8
-psycopg2==2.4.5
-argh==0.15.1
+alembic==0.3.6
+  Mako==0.7.2
+  MarkupSafe==0.15
 PyYAML==3.10
+argh==0.15.1
 ipython==0.13
+psycopg2==2.4.5
 
--e git://github.com/alfredhq/alfred-db.git@1d7bb2088e3b5e9eacacd09f03f8d21e1cb9e8eb#egg=alfred-db
 -e git://github.com/alfredhq/flask-alfred-db.git@409f59f678fb73dc5edf4fd042f285b6d64f690a#egg=Flask-Alfred-DB
+-e git://github.com/alfredhq/alfred-db.git@bf8137420087d97f9b51d9c668c9e2680309289e#egg=alfred-db
 -e .
