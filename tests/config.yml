@@ -1,0 +1,2 @@
+database_uri: 'sqlite:///:memory:'
+testing: true
