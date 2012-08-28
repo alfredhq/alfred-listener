@@ -1,7 +1,7 @@
 import os
 
 from flask import Flask
-from flask.ext.alfred_db import AlfredDB
+from flask_alfred_db import AlfredDB
 
 from .config import configure
 
