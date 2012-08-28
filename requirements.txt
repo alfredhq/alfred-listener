@@ -1,0 +1,12 @@
+Flask==0.9
+  Werkzeug==0.8.3
+  Jinja2==2.6
+SQLAlchemy==0.7.8
+psycopg2==2.4.5
+argh==0.15.1
+PyYAML==3.10
+ipython==0.13
+
+-e git://github.com/alfredhq/alfred-db.git@1d7bb2088e3b5e9eacacd09f03f8d21e1cb9e8eb#egg=alfred-db
+-e git://github.com/alfredhq/flask-alfred-db.git@409f59f678fb73dc5edf4fd042f285b6d64f690a#egg=Flask-Alfred-DB
+-e .
