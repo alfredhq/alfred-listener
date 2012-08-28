@@ -5,7 +5,7 @@ from argh import arg, ArghParser
 from functools import wraps
 
 
-DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+DIR = os.path.abspath(os.path.dirname(__file__))
 CONFIG = os.path.join(DIR, 'configs', 'default.yml')
 CONFIG = os.environ.get('ALFRED_LISTENER_CONFIG', CONFIG)
 
@@ -34,7 +34,11 @@ def shell(app, args):
         sh(app=app)
 
 
-if __name__ == '__main__':
+def main():
     parser = ArghParser()
     parser.add_commands([runserver, shell])
     parser.dispatch()
+
+
+if __name__ == '__main__':
+    main()

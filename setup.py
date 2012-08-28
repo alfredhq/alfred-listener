@@ -17,5 +17,9 @@ setup(
         'PyYAML',
         'Flask-Alfred-DB',
     ],
-    scripts = ['alfred_listener/bin/listener'],
+    entry_points={
+        'console_scripts': [
+            'alfred-listener = alfred_listener.__main__:main'
+        ],
+    }
 )
