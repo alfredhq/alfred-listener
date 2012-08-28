@@ -120,6 +120,9 @@ class SavedDataTestCase(BaseTestCase):
             hash='2e7be88382545a9dc7a05b9d2e85a7041e311075'
         )
 
+    def send_hook(self):
+        return self.client.post('/', data={'payload': self.payload})
+
     def test_repository_created(self):
         self.send_hook()
         self.assertIsNotNone(self.repository_query.first())
