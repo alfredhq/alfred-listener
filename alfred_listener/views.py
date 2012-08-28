@@ -21,10 +21,11 @@ def handler():
         name=hook_data['repo_name'], user=hook_data['repo_user']
     ).first()
     if repository is None:
-        repository = Repository()
-        repository.name = hook_data['repo_name']
-        repository.user = hook_data['repo_user']
-        repository.url = hook_data['repo_url']
+        repository = Repository(
+            name=hook_data['repo_name'],
+            user=hook_data['repo_user'],
+            url=hook_data['repo_url']
+        )
         db.session.add(repository)
         db.session.commit()
 
@@ -32,14 +33,15 @@ def handler():
         hash=hook_data['hash'], repository_id=repository.id
     ).first()
     if commit is None:
-        commit = Commit()
-        commit.repository_id = repository.id
-        commit.hash = hook_data['hash']
-        commit.ref = hook_data['ref']
-        commit.compare_url = hook_data['compare_url']
-        commit.committer_name = hook_data['committer_name']
-        commit.committer_email = hook_data['committer_email']
-        commit.message = hook_data['message']
+        commit = Commit(
+            repository_id=repository.id,
+            hash=hook_data['hash'],
+            ref=hook_data['ref'],
+            compare_url=hook_data['compare_url'],
+            committer_name=hook_data['committer_name'],
+            committer_email=hook_data['committer_email'],
+            message=hook_data['message']
+        )
         db.session.add(commit)
         db.session.commit()
     return 'OK'
