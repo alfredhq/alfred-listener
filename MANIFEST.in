@@ -1,1 +1,3 @@
+include LICENSE
+
 include alfred_listener/configs/default.yml
