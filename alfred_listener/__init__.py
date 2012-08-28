@@ -1,12 +1,9 @@
 import os
 
 from flask import Flask
-from flask_alfred_db import AlfredDB
 
 from .config import configure
-
-
-db = AlfredDB()
+from .database import db
 
 
 def create_app(config):
