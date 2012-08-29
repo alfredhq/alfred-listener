@@ -16,6 +16,7 @@ setup(
         'argh',
         'PyYAML',
         'Flask-Alfred-DB',
+        'simplejson'
     ],
     entry_points={
         'console_scripts': [

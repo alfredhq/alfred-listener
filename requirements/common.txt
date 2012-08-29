@@ -7,6 +7,7 @@ alembic==0.3.6
   MarkupSafe==0.15
 PyYAML==3.10
 argh==0.15.1
+simplejson==2.6.1
 unittest2==0.5.1
 nose==1.1.2
 

@@ -20,7 +20,7 @@ def handler():
         return 'Bad request', 400
     hook_data = parse_hook_data(payload_data)
 
-    repository = db.session.query(Repository).filter_by(
+    repository = db.session.query(Repository.id).filter_by(
         name=hook_data['repo_name'], user=hook_data['repo_user']
     ).first()
     if repository is None:
@@ -32,7 +32,7 @@ def handler():
         db.session.add(repository)
         db.session.commit()
 
-    commit = db.session.query(Commit).filter_by(
+    commit = db.session.query(Commit.id).filter_by(
         hash=hook_data['hash'], repository_id=repository.id
     ).first()
     if commit is None:
