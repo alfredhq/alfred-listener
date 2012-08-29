@@ -12,5 +12,5 @@ unittest2==0.5.1
 nose==1.1.2
 
 -e git://github.com/alfredhq/flask-alfred-db.git@409f59f678fb73dc5edf4fd042f285b6d64f690a#egg=Flask-Alfred-DB
--e git://github.com/alfredhq/alfred-db.git@bf8137420087d97f9b51d9c668c9e2680309289e#egg=alfred-db
+-e git://github.com/alfredhq/alfred-db.git@0c7ba1aa1a6df89983e1e294f350182670faa3a2#egg=alfred-db
 -e .
