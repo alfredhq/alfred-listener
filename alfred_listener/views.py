@@ -10,6 +10,9 @@ webhooks = Blueprint('webhooks', __name__)
 
 @webhooks.route('/', methods=['POST'])
 def handler():
+    event = request.headers.get('X-Github-Event')
+    if event != 'push':
+        return 'Not Acceptable', 406
     payload = request.form.get('payload')
     try:
         payload_data = json.loads(payload)

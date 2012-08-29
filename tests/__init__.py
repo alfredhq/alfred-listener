@@ -98,14 +98,23 @@ class WebhookHandlerTestCase(BaseTestCase):
         response = self.client.post('/')
         self.assertNotEqual(response.status_code, 405)
 
+    def test_not_acceptable(self):
+        response = self.client.post('/', data={'payload': self.payload})
+        self.assertEqual(response.status_code, 406)
+
     def test_bad_request(self):
-        response = self.client.post('/')
+        headers = {'X-Github-Event': 'push'}
+        response = self.client.post('/', headers=headers)
         self.assertEqual(response.status_code, 400)
-        response = self.client.post('/', data={'payload': '{"asd": 123'})
+        response = self.client.post('/',
+                                    headers=headers,
+                                    data={'payload': '{"asd": 123'})
         self.assertEqual(response.status_code, 400)
 
-    def test_response_status_with_payload(self):
-        response = self.client.post('/', data={'payload': self.payload})
+    def test_good_response_with_payload(self):
+        data = {'payload': self.payload}
+        headers = {'X-Github-Event': 'push'}
+        response = self.client.post('/', headers=headers, data=data)
         self.assertEqual(response.status_code, 200)
 
 
@@ -121,7 +130,9 @@ class SavedDataTestCase(BaseTestCase):
         )
 
     def send_hook(self):
-        return self.client.post('/', data={'payload': self.payload})
+        data = {'payload': self.payload}
+        headers = {'X-Github-Event': 'push'}
+        return self.client.post('/', headers=headers, data=data)
 
     def test_repository_created(self):
         self.send_hook()
