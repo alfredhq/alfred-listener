@@ -10,10 +10,10 @@ webhooks = Blueprint('webhooks', __name__)
 
 @webhooks.route('/', methods=['POST'])
 def handler():
-    payload = request.form.get('payload', '')
+    payload = request.form.get('payload')
     try:
         payload_data = json.loads(payload)
-    except ValueError:
+    except (ValueError, TypeError):
         return 'Bad request', 400
     hook_data = parse_hook_data(payload_data)
 
