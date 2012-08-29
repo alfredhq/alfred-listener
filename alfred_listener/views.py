@@ -1,4 +1,4 @@
-from flask import Blueprint, request, json
+from flask import Blueprint, request, json, abort
 from alfred_db.models import Repository, Commit
 
 from .database import db
@@ -12,12 +12,12 @@ webhooks = Blueprint('webhooks', __name__)
 def handler():
     event = request.headers.get('X-Github-Event')
     if event != 'push':
-        return 'Not Acceptable', 406
+        abort(406)
     payload = request.form.get('payload')
     try:
         payload_data = json.loads(payload)
     except (ValueError, TypeError):
-        return 'Bad request', 400
+        abort(400)
     hook_data = parse_hook_data(payload_data)
 
     repository = db.session.query(Repository.id).filter_by(
