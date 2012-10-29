@@ -5,16 +5,16 @@ from argh import arg, ArghParser
 from functools import wraps
 
 
-DIR = os.path.abspath(os.path.dirname(__file__))
-CONFIG = os.path.join(DIR, 'configs', 'default.yml')
-CONFIG = os.environ.get('ALFRED_LISTENER_CONFIG', CONFIG)
+CONFIG = os.environ.get('ALFRED_LISTENER_CONFIG')
 
 
-def with_app(func):
+def with_app(func, args):
+    if CONFIG is None:
+        raise RuntimeError('ALFRED_LISTENER_CONFIG env variable is not set.')
     @wraps(func)
     def wrapper(*args, **kwargs):
         from alfred_listener import create_app
-        app = create_app(CONFIG)
+        app = create_app(config)
         return func(app, *args, **kwargs)
     return wrapper
 
