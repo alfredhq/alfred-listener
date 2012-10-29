@@ -16,7 +16,9 @@ setup(
         'argh',
         'PyYAML',
         'Flask-Alfred-DB',
-        'simplejson'
+        'simplejson',
+        'msgpack-python',
+        'pyzmq',
     ],
     entry_points={
         'console_scripts': [
