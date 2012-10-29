@@ -74,23 +74,28 @@ class HookParserTestCase(BaseTestCase):
         self.assertEqual(self.parsed_data['committer_email'],
                          'dima@kukushkin.me')
 
-    def test_repo(self):
-        self.assertTrue('repo_name' in self.parsed_data.keys())
-        self.assertEqual(self.parsed_data['repo_name'], 'test')
-        self.assertTrue('repo_user' in self.parsed_data.keys())
-        self.assertEqual(self.parsed_data['repo_user'], 'xobb1t')
-
     def test_message(self):
         self.assertTrue('message' in self.parsed_data.keys())
         self.assertEqual(self.parsed_data['message'], 'Update README.md')
 
-    def test_repo_url(self):
-        self.assertTrue('repo_url' in self.parsed_data.keys())
-        self.assertEqual(self.parsed_data['repo_url'],
-                         'https://github.com/xobb1t/test')
-
 
 class WebhookHandlerTestCase(BaseTestCase):
+
+    def setUp(self):
+        super(WebhookHandlerTestCase, self).setUp()
+        self.repo_token = 'test-token'
+        self.repository = Repository(
+            owner_type='user', owner_name='xobb1t', github_id=3213131,
+            token=self.repo_token, url='https://github.com/xobb1t/repo',
+            owner_id=312313123, name='repo'
+        )
+        db.session.add(self.repository)
+        db.session.commit()
+
+    def tearDown(self):
+        super(WebhookHandlerTestCase, self).tearDown()
+        db.session.delete(self.repository)
+        db.session.commit()
 
     def test_not_allowed(self):
         response = self.client.get('/')
@@ -100,21 +105,26 @@ class WebhookHandlerTestCase(BaseTestCase):
 
     def test_not_acceptable(self):
         response = self.client.post('/', data={'payload': self.payload})
-        self.assertEqual(response.status_code, 406)
+        self.assertEqual(response.status_code, 400)
 
     def test_bad_request(self):
         headers = {'X-Github-Event': 'push'}
         response = self.client.post('/', headers=headers)
         self.assertEqual(response.status_code, 400)
-        response = self.client.post('/',
+        response = self.client.post('/?token={0}'.format(self.repo_token),
                                     headers=headers,
                                     data={'payload': '{"asd": 123'})
         self.assertEqual(response.status_code, 400)
+        response = self.client.post('/?token={0}'.format('blablabla'),
+                                    headers=headers,
+                                    data={'payload': self.payload})
+        self.assertEqual(response.status_code, 404)
 
     def test_good_response_with_payload(self):
         data = {'payload': self.payload}
         headers = {'X-Github-Event': 'push'}
-        response = self.client.post('/', headers=headers, data=data)
+        response = self.client.post('/?token={0}'.format(self.repo_token),
+                                    headers=headers, data=data)
         self.assertEqual(response.status_code, 200)
 
 
@@ -122,31 +132,32 @@ class SavedDataTestCase(BaseTestCase):
 
     def setUp(self):
         super(SavedDataTestCase, self).setUp()
-        self.repository_query = db.session.query(Repository).filter_by(
-            name='test', user='xobb1t'
-        )
         self.commit_query = db.session.query(Commit).filter_by(
             hash='2e7be88382545a9dc7a05b9d2e85a7041e311075'
         )
+        self.repo_token = 'test-token'
+        self.repository = Repository(
+            owner_type='user', owner_name='xobb1t', github_id=3213131,
+            token=self.repo_token, url='https://github.com/xobb1t/repo',
+            owner_id=312313123, name='repo'
+        )
+        db.session.add(self.repository)
+        db.session.commit()
+
+    def tearDown(self):
+        super(SavedDataTestCase, self).tearDown()
+        db.session.delete(self.repository)
+        db.session.commit()
 
     def send_hook(self):
         data = {'payload': self.payload}
         headers = {'X-Github-Event': 'push'}
-        return self.client.post('/', headers=headers, data=data)
-
-    def test_repository_created(self):
-        self.send_hook()
-        self.assertIsNotNone(self.repository_query.first())
+        return self.client.post('/?token={0}'.format(self.repo_token),
+                                headers=headers, data=data)
 
     def test_commit_created(self):
         self.send_hook()
         self.assertIsNotNone(self.commit_query.first())
-
-    def test_repository_unique(self):
-        self.send_hook()
-        self.assertEqual(self.repository_query.count(), 1)
-        self.send_hook()
-        self.assertEqual(self.repository_query.count(), 1)
 
     def test_commit_unique(self):
         self.send_hook()
@@ -154,16 +165,10 @@ class SavedDataTestCase(BaseTestCase):
         self.send_hook()
         self.assertEqual(self.commit_query.count(), 1)
 
-    def test_repository_data(self):
-        self.send_hook()
-        repository = self.repository_query.first()
-        self.assertEqual(repository.url, 'https://github.com/xobb1t/test')
-
     def test_commit_data(self):
         self.send_hook()
-        repository = self.repository_query.first()
         commit = self.commit_query.first()
-        self.assertEqual(commit.repository_id, repository.id)
+        self.assertEqual(commit.repository_id, self.repository.id)
         self.assertEqual(commit.message, 'Update README.md')
         self.assertEqual(commit.committer_name, 'Dima Kukushkin')
         self.assertEqual(commit.committer_email, 'dima@kukushkin.me')

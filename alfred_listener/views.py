@@ -12,25 +12,23 @@ webhooks = Blueprint('webhooks', __name__)
 def handler():
     event = request.headers.get('X-Github-Event')
     if event != 'push':
-        abort(406)
+        abort(400)
     payload = request.form.get('payload')
+    token = request.args.get('token')
+    if token is None:
+        abort(400)
+
+    repository = db.session.query(Repository.id).filter_by(
+        token=token
+    ).first()
+    if repository is None:
+        abort(404)
+
     try:
         payload_data = json.loads(payload)
     except (ValueError, TypeError):
         abort(400)
     hook_data = parse_hook_data(payload_data)
-
-    repository = db.session.query(Repository.id).filter_by(
-        name=hook_data['repo_name'], user=hook_data['repo_user']
-    ).first()
-    if repository is None:
-        repository = Repository(
-            name=hook_data['repo_name'],
-            user=hook_data['repo_user'],
-            url=hook_data['repo_url']
-        )
-        db.session.add(repository)
-        db.session.commit()
 
     commit = db.session.query(Commit.id).filter_by(
         hash=hook_data['hash'], repository_id=repository.id
