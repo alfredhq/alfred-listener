@@ -1,4 +1,0 @@
--r common.txt
-
-ipython==0.13
-psycopg2==2.4.5
