@@ -5,14 +5,11 @@ from argh import arg, ArghParser
 from functools import wraps
 
 
-CONFIG = os.environ.get('ALFRED_LISTENER_CONFIG')
-
-
-def with_app(func, args):
-    if CONFIG is None:
-        raise RuntimeError('ALFRED_LISTENER_CONFIG env variable is not set.')
+def with_app(func):
+    @arg('--config', help='Path to config file')
     @wraps(func)
     def wrapper(*args, **kwargs):
+        config = args[0].config
         from alfred_listener import create_app
         app = create_app(config)
         return func(app, *args, **kwargs)
