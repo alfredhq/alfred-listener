@@ -6,8 +6,8 @@ from functools import wraps
 
 
 def with_app(func):
-    @arg('--config', help='Path to config file')
     @wraps(func)
+    @arg('--config', help='Path to config file', required=True)
     def wrapper(*args, **kwargs):
         config = args[0].config
         from alfred_listener import create_app
