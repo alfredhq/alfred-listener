@@ -9,6 +9,7 @@ PyYAML==3.10
 argh==0.15.1
 simplejson==2.6.1
 unittest2==0.5.1
+mock==1.0.0
 nose==1.1.2
 
 ipython==0.13
