@@ -5,16 +5,13 @@ from argh import arg, ArghParser
 from functools import wraps
 
 
-DIR = os.path.abspath(os.path.dirname(__file__))
-CONFIG = os.path.join(DIR, 'configs', 'default.yml')
-CONFIG = os.environ.get('ALFRED_LISTENER_CONFIG', CONFIG)
-
-
 def with_app(func):
     @wraps(func)
+    @arg('--config', help='Path to config file', required=True)
     def wrapper(*args, **kwargs):
+        config = args[0].config
         from alfred_listener import create_app
-        app = create_app(CONFIG)
+        app = create_app(config)
         return func(app, *args, **kwargs)
     return wrapper
 

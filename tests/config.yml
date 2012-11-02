@@ -1,2 +1,3 @@
 database_uri: 'sqlite:///:memory:'
 testing: true
+coordinator: 'tcp://127.0.0.1:6000'

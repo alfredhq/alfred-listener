@@ -1,8 +1,8 @@
 from flask import Blueprint, request, json, abort
-from alfred_db.models import Repository, Commit
+from alfred_db.models import Repository
 
 from .database import db
-from .helpers import parse_hook_data
+from .helpers import report_for_payload, push_report_data
 
 
 webhooks = Blueprint('webhooks', __name__)
@@ -28,21 +28,8 @@ def handler():
         payload_data = json.loads(payload)
     except (ValueError, TypeError):
         abort(400)
-    hook_data = parse_hook_data(payload_data)
 
-    commit = db.session.query(Commit.id).filter_by(
-        hash=hook_data['hash'], repository_id=repository.id
-    ).first()
-    if commit is None:
-        commit = Commit(
-            repository_id=repository.id,
-            hash=hook_data['hash'],
-            ref=hook_data['ref'],
-            compare_url=hook_data['compare_url'],
-            committer_name=hook_data['committer_name'],
-            committer_email=hook_data['committer_email'],
-            message=hook_data['message']
-        )
-        db.session.add(commit)
-        db.session.commit()
+    report = report_for_payload(payload_data, repository)
+    push_report_data(report)
+
     return 'OK'

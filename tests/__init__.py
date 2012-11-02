@@ -1,7 +1,10 @@
 import os
 import unittest2
-from flask import json
+
+import mock
+from flask import json, current_app
 from flask_alfred_db import AlfredDB
+from msgpack import packb
 
 from alfred_db.models import Repository, Commit, Base
 from alfred_listener import create_app
@@ -92,10 +95,17 @@ class WebhookHandlerTestCase(BaseTestCase):
         db.session.add(self.repository)
         db.session.commit()
 
+        self.Context = mock.Mock()
+        self.context = self.Context.return_value
+        self.socket = self.context.socket.return_value
+        self.context_patch = mock.patch('zmq.Context', self.Context)
+        self.context_patch.start()
+
     def tearDown(self):
         super(WebhookHandlerTestCase, self).tearDown()
         db.session.delete(self.repository)
         db.session.commit()
+        self.context_patch.stop()
 
     def test_not_allowed(self):
         response = self.client.get('/')
@@ -127,7 +137,6 @@ class WebhookHandlerTestCase(BaseTestCase):
                                     headers=headers, data=data)
         self.assertEqual(response.status_code, 200)
 
-
 class SavedDataTestCase(BaseTestCase):
 
     def setUp(self):
@@ -144,10 +153,17 @@ class SavedDataTestCase(BaseTestCase):
         db.session.add(self.repository)
         db.session.commit()
 
+        self.Context = mock.Mock()
+        self.context = self.Context.instance.return_value
+        self.socket = self.context.socket.return_value
+        self.context_patch = mock.patch('zmq.Context', self.Context)
+        self.context_patch.start()
+
     def tearDown(self):
         super(SavedDataTestCase, self).tearDown()
         db.session.delete(self.repository)
         db.session.commit()
+        self.context_patch.stop()
 
     def send_hook(self):
         data = {'payload': self.payload}
@@ -173,3 +189,25 @@ class SavedDataTestCase(BaseTestCase):
         self.assertEqual(commit.committer_name, 'Dima Kukushkin')
         self.assertEqual(commit.committer_email, 'dima@kukushkin.me')
         self.assertEqual(commit.ref, 'refs/heads/master')
+
+    def test_report_created(self):
+        self.send_hook()
+        commit = self.commit_query.first()
+        self.assertIsNotNone(commit.report)
+
+    def test_message_sent(self):
+        self.send_hook()
+        commit = self.commit_query.first()
+        task = {
+            'report_id': commit.report.id,
+            'owner_name': commit.repository.owner_name,
+            'repo_name': commit.repository.name,
+            'hash': commit.hash,
+        }
+        self.socket.send.assert_has_calls(mock.call(packb(task)))
+
+    def test_socket_connect(self):
+        self.send_hook()
+        self.socket.connect.assert_has_calls(
+            mock.call(current_app.config['COORDINATOR'])
+        )
