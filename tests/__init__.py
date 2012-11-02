@@ -154,7 +154,7 @@ class SavedDataTestCase(BaseTestCase):
         db.session.commit()
 
         self.Context = mock.Mock()
-        self.context = self.Context.return_value
+        self.context = self.Context.instance.return_value
         self.socket = self.context.socket.return_value
         self.context_patch = mock.patch('zmq.Context', self.Context)
         self.context_patch.start()
