@@ -61,7 +61,7 @@ def report_for_payload(payload_data, repository):
 
 def push_report_data(report):
     repository = report.commit.repository
-    context = zmq.Context()
+    context = zmq.Context.instance()
     socket = context.socket(zmq.PUSH)
     socket.connect(current_app.config['COORDINATOR'])
     msg = msgpack.packb({
@@ -71,3 +71,4 @@ def push_report_data(report):
         'hash': report.commit.hash
     })
     socket.send(msg)
+    socket.close()
