@@ -18,9 +18,10 @@ def with_app(func):
 
 @arg('--host', default='127.0.0.1', help='the host')
 @arg('--port', default=5000, help='the port')
+@arg('--noreload', action='store_true', help='disable code reloader')
 @with_app
 def runserver(app, args):
-    app.run(args.host, args.port)
+    app.run(args.host, args.port, use_reloader=not args.noreload)
 
 
 @with_app
