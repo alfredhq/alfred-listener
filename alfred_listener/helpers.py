@@ -2,7 +2,7 @@ import msgpack
 import zmq
 
 from flask import current_app
-from alfred_db.models import Report, Commit
+from alfred_db.models import Report, Push
 from .database import db
 
 
@@ -18,7 +18,7 @@ def get_shell():
 
 
 def parse_hook_data(data):
-    hash = data.get('after')
+    commit_hash = data.get('after')
     compare_url = data.get('compare')
     ref = data.get('ref')
     commit = data.get('head_commit')
@@ -27,40 +27,40 @@ def parse_hook_data(data):
     committer_email = committer.get('email')
 
     return {
-        'hash': hash,
+        'commit_hash': commit_hash,
         'compare_url': compare_url,
         'ref': ref,
         'committer_name': committer_name,
         'committer_email': committer_email,
-        'message': commit['message'],
+        'commit_message': commit['message'],
     }
 
 
 def report_for_payload(payload_data, repository):
     hook_data = parse_hook_data(payload_data)
-    commit = db.session.query(Commit.id).filter_by(
-        hash=hook_data['hash'], repository_id=repository.id
+    push = db.session.query(Push.id).filter_by(
+        commit_hash=hook_data['commit_hash'], repository_id=repository.id
     ).first()
-    if commit is None:
-        commit = Commit(
+    if push is None:
+        push = Push(
             repository_id=repository.id,
-            hash=hook_data['hash'],
             ref=hook_data['ref'],
             compare_url=hook_data['compare_url'],
+            commit_hash=hook_data['commit_hash'],
+            commit_message=hook_data['commit_message'],
             committer_name=hook_data['committer_name'],
             committer_email=hook_data['committer_email'],
-            message=hook_data['message']
         )
-        db.session.add(commit)
+        db.session.add(push)
         db.session.flush()
-    report = Report(commit_id=commit.id)
+    report = Report(push_id=push.id)
     db.session.add(report)
     db.session.commit()
     return report
 
 
 def push_report_data(report):
-    repository = report.commit.repository
+    repository = report.push.repository
     context = zmq.Context.instance()
     socket = context.socket(zmq.PUSH)
     socket.connect(current_app.config['COORDINATOR'])
@@ -68,7 +68,7 @@ def push_report_data(report):
         'report_id': report.id,
         'owner_name': repository.owner_name,
         'repo_name': repository.name,
-        'hash': report.commit.hash
+        'hash': report.push.commit_hash
     })
     socket.send(msg)
     socket.close()

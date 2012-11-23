@@ -6,7 +6,7 @@ from flask import json, current_app
 from flask_alfred_db import AlfredDB
 from msgpack import packb
 
-from alfred_db.models import Repository, Commit, Base
+from alfred_db.models import Repository, Push, Base
 from alfred_listener import create_app
 from alfred_listener.database import db
 from alfred_listener.helpers import parse_hook_data
@@ -52,10 +52,10 @@ class BaseTestCase(unittest2.TestCase):
 
 class HookParserTestCase(BaseTestCase):
 
-    def test_hash(self): 
-        self.assertTrue('hash' in self.parsed_data.keys())
+    def test_commit_hash(self): 
+        self.assertTrue('commit_hash' in self.parsed_data.keys())
         self.assertEqual(
-            self.parsed_data['hash'],
+            self.parsed_data['commit_hash'],
             '2e7be88382545a9dc7a05b9d2e85a7041e311075',
         )
 
@@ -77,9 +77,9 @@ class HookParserTestCase(BaseTestCase):
         self.assertEqual(self.parsed_data['committer_email'],
                          'dima@kukushkin.me')
 
-    def test_message(self):
-        self.assertTrue('message' in self.parsed_data.keys())
-        self.assertEqual(self.parsed_data['message'], 'Update README.md')
+    def test_commit_message(self):
+        self.assertTrue('commit_message' in self.parsed_data.keys())
+        self.assertEqual(self.parsed_data['commit_message'], 'Update README.md')
 
 
 class WebhookHandlerTestCase(BaseTestCase):
@@ -141,8 +141,8 @@ class SavedDataTestCase(BaseTestCase):
 
     def setUp(self):
         super(SavedDataTestCase, self).setUp()
-        self.commit_query = db.session.query(Commit).filter_by(
-            hash='2e7be88382545a9dc7a05b9d2e85a7041e311075'
+        self.push_query = db.session.query(Push).filter_by(
+            commit_hash='2e7be88382545a9dc7a05b9d2e85a7041e311075'
         )
         self.repo_token = 'test-token'
         self.repository = Repository(
@@ -171,38 +171,38 @@ class SavedDataTestCase(BaseTestCase):
         return self.client.post('/?token={0}'.format(self.repo_token),
                                 headers=headers, data=data)
 
-    def test_commit_created(self):
+    def test_push_created(self):
         self.send_hook()
-        self.assertIsNotNone(self.commit_query.first())
+        self.assertIsNotNone(self.push_query.first())
 
-    def test_commit_unique(self):
+    def test_push_unique(self):
         self.send_hook()
-        self.assertEqual(self.commit_query.count(), 1)
+        self.assertEqual(self.push_query.count(), 1)
         self.send_hook()
-        self.assertEqual(self.commit_query.count(), 1)
+        self.assertEqual(self.push_query.count(), 1)
 
-    def test_commit_data(self):
+    def test_push_data(self):
         self.send_hook()
-        commit = self.commit_query.first()
-        self.assertEqual(commit.repository_id, self.repository.id)
-        self.assertEqual(commit.message, 'Update README.md')
-        self.assertEqual(commit.committer_name, 'Dima Kukushkin')
-        self.assertEqual(commit.committer_email, 'dima@kukushkin.me')
-        self.assertEqual(commit.ref, 'refs/heads/master')
+        push = self.push_query.first()
+        self.assertEqual(push.repository_id, self.repository.id)
+        self.assertEqual(push.commit_message, 'Update README.md')
+        self.assertEqual(push.committer_name, 'Dima Kukushkin')
+        self.assertEqual(push.committer_email, 'dima@kukushkin.me')
+        self.assertEqual(push.ref, 'refs/heads/master')
 
     def test_report_created(self):
         self.send_hook()
-        commit = self.commit_query.first()
-        self.assertIsNotNone(commit.report)
+        push = self.push_query.first()
+        self.assertIsNotNone(push.report)
 
     def test_message_sent(self):
         self.send_hook()
-        commit = self.commit_query.first()
+        push = self.push_query.first()
         task = {
-            'report_id': commit.report.id,
-            'owner_name': commit.repository.owner_name,
-            'repo_name': commit.repository.name,
-            'hash': commit.hash,
+            'report_id': push.report.id,
+            'owner_name': push.repository.owner_name,
+            'repo_name': push.repository.name,
+            'hash': push.commit_hash,
         }
         self.socket.send.assert_has_calls(mock.call(packb(task)))
 
