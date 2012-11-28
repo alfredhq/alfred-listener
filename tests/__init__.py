@@ -190,16 +190,11 @@ class SavedDataTestCase(BaseTestCase):
         self.assertEqual(push.committer_email, 'dima@kukushkin.me')
         self.assertEqual(push.ref, 'refs/heads/master')
 
-    def test_report_created(self):
-        self.send_hook()
-        push = self.push_query.first()
-        self.assertIsNotNone(push.report)
-
     def test_message_sent(self):
         self.send_hook()
         push = self.push_query.first()
         task = {
-            'report_id': push.report.id,
+            'push_id': push.id,
             'owner_name': push.repository.owner_name,
             'repo_name': push.repository.name,
             'hash': push.commit_hash,

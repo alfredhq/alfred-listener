@@ -2,7 +2,7 @@ from flask import Blueprint, request, json, abort
 from alfred_db.models import Repository
 
 from .database import db
-from .helpers import report_for_payload, push_report_data
+from .helpers import push_for_payload, send_push_data
 
 
 webhooks = Blueprint('webhooks', __name__)
@@ -29,7 +29,7 @@ def handler():
     except (ValueError, TypeError):
         abort(400)
 
-    report = report_for_payload(payload_data, repository)
-    push_report_data(report)
+    push = push_for_payload(payload_data, repository)
+    send_push_data(push)
 
     return 'OK'
